@@ -1,13 +1,13 @@
 import SingleTilePreviewContainer from '@/components/SingleTilePreviewContainer'
 import { TileAttributes } from '@/shared/interfaces/TileAttributes'
 import { NextPage } from 'next'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 const LandingPage: NextPage = () => {
   const [tiles, setTiles] = useState<TileAttributes[]>([])
   const [chosenColor, setChosenColor] = useState('#00FFFF')
-
+  const selectedTileWindowRef = useRef<Window | null | undefined>()
   const handleNewTileClick = useCallback(() => {
     let left = 0
     let top = 0
@@ -30,7 +30,7 @@ const LandingPage: NextPage = () => {
 
     if (newWindow) {
       newWindow.onload = () => {
-        console.log('lodaded')
+        selectedTileWindowRef.current = newWindow
         newWindow.postMessage({ color: chosenColor }, '*')
         setTiles([
           ...tiles,
@@ -80,6 +80,7 @@ const LandingPage: NextPage = () => {
               singleTile={singleTile}
               tiles={tiles}
               setTiles={setTiles}
+              selectedTileWindowRef={selectedTileWindowRef}
             />
           ))}
         </div>

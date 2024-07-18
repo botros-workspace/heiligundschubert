@@ -1,6 +1,7 @@
 import { TileAttributes } from '@/shared/interfaces/TileAttributes'
 import React, {
   FunctionComponent,
+  MutableRefObject,
   useCallback,
   useEffect,
   useRef,
@@ -13,18 +14,19 @@ type Props = {
   singleTile: TileAttributes
   tiles: TileAttributes[]
   setTiles: (value: TileAttributes[]) => void
+  selectedTileWindowRef: MutableRefObject<Window | null | undefined>
 }
 const SingleTilePreviewContainer: FunctionComponent<Props> = ({
   singleTile,
   tiles,
   setTiles,
+  selectedTileWindowRef,
 }) => {
   const [updatedColor, setUpdatedColor] = useState('')
-  const selectedTileWindowRef = useRef<Window | null>()
   const colorInputRef = useRef<HTMLInputElement>(null)
 
   const handleFocusWindowClick = useCallback(() => {
-    if (singleTile.popupWindow) {
+    if (singleTile.popupWindow && !singleTile.popupWindow?.closed) {
       singleTile.popupWindow.focus()
       selectedTileWindowRef.current = singleTile.popupWindow
     } else {
@@ -37,16 +39,13 @@ const SingleTilePreviewContainer: FunctionComponent<Props> = ({
       if (newWindow) {
         newWindow.onload = () => {
           newWindow.postMessage({ color: singleTile.color }, '*')
+          singleTile.popupWindow?.focus()
+          singleTile.popupWindow = newWindow
           selectedTileWindowRef.current = newWindow
         }
       }
     }
-  }, [
-    singleTile.color,
-    singleTile.left,
-    singleTile.popupWindow,
-    singleTile.top,
-  ])
+  }, [selectedTileWindowRef, singleTile])
   useEffect(() => {
     if (selectedTileWindowRef.current && updatedColor !== '') {
       setTiles(
@@ -60,7 +59,7 @@ const SingleTilePreviewContainer: FunctionComponent<Props> = ({
       )
       setUpdatedColor('')
     }
-  }, [updatedColor, tiles, setTiles, singleTile.id])
+  }, [updatedColor, tiles, setTiles, singleTile.id, selectedTileWindowRef])
   return (
     <div
       className='d-flex flex-row justify-content-end align-items-end'
